@@ -48,10 +48,59 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
 
         extractor = cv::BRISK::create(threshold, octaves, patternScale);
     }
-    else
+    else if (descriptorType.compare("HARRIS") == 0)
     {
+        // Detector parameters
+        int blockSize = 2;     // for every pixel, a blockSize Ã blockSize neighborhood is considered
+        int apertureSize = 3;  // aperture parameter for Sobel operator (must be odd)
+        double k = 0.04;       // Harris parameter (see equation for details)
 
-        //...
+        // Detect Harris corners and normalize output
+        cv::Mat dst, dst_norm, dst_norm_scaled;
+        cv::cornerHarris( img, dst, blockSize, apertureSize, k );
+        cv::normalize( dst, dst_norm, 0, 255, cv::NORM_MINMAX, CV_32FC1, cv::noArray() );
+        cv::convertScaleAbs( dst_norm, dst_norm_scaled );
+
+        for( int i = 0; i < dst_norm.rows ; i++ )
+        {
+            for( int j = 0; j < dst_norm.cols; j++ )
+            {
+                if( (int) dst_norm.at<float>(i,j) > 200 )
+                {
+                    keypoints.emplace_back(cv::KeyPoint((float)i, (float)j,1));
+                }
+            }
+        }
+
+        extractor = cv::xfeatures2d::BriefDescriptorExtractor::create();
+    }
+    else if (descriptorType.compare("FAST") == 0)
+    {
+        int threshold = 30;  // difference between intensity of the central pixel and pixels of a circle around this pixel
+        bool bNMS = true;    // perform non-maxima suppression on keypoints
+        //cv::FastFeatureDetector type = cv::FastFeatureDetector::TYPE_9_16; // TYPE_9_16, TYPE_7_12, TYPE_5_8
+        cv::Ptr<cv::FeatureDetector> detector = cv::FastFeatureDetector::create(threshold, bNMS, cv::FastFeatureDetector::TYPE_9_16);
+        detector->detect(img, keypoints);
+        extractor = cv::FastFeatureDetector::create();
+    }
+    else if (descriptorType.compare("ORB") == 0) // check
+    {
+        const int MAX_FEATURES = 500;
+        cv::Ptr<cv::Feature2D> orb = cv::ORB::create(MAX_FEATURES);
+        orb->detect(img, keypoints);
+        extractor = cv::ORB::create();
+    }
+    else if (descriptorType.compare("AKAZE") == 0) // check
+    {
+        cv::Ptr<cv::AKAZE> akaze = cv::AKAZE::create();
+        akaze->detect(img, keypoints);
+        extractor = cv::AKAZE::create();
+    }
+    else if (descriptorType.compare("SIFT") == 0) // check
+    {
+        cv::Ptr<cv::FeatureDetector> detector = cv::xfeatures2d::SIFT::create();
+        detector->detect(img, keypoints);
+        extractor = cv::xfeatures2d::SiftDescriptorExtractor::create();
     }
 
     // perform feature description
