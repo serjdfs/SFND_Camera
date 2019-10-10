@@ -98,7 +98,15 @@ int main(int argc, const char *argv[])
         cv::Rect vehicleRect(535, 180, 180, 150);
         if (bFocusOnVehicle)
         {
-            // ...
+            vector<cv::KeyPoint> temp;
+            for(auto t = keypoints.begin(); t != keypoints.end(); t++)
+            {
+                if(vehicleRect.contains(cv::Point(t->pt.x,t->pt.y)))
+                {
+                    temp.push_back(*t);
+                }
+            }
+            keypoints = temp;
         }
 
         //// EOF STUDENT ASSIGNMENT
