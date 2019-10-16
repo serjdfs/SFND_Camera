@@ -41,15 +41,24 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
             }
         }
     }
+    cout << " Amount of matched points: " << matches.size() << endl;
 }
 
-// BRIEF, ORB, FREAK, AKAZE and SIFT
+// BRISK, BRIEF, ORB, FREAK, AKAZE and SIFT
 // Use one of several types of state-of-art descriptors to uniquely identify keypoints
 void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descriptors, string descriptorType)
 {
     // select appropriate descriptor
     cv::Ptr<cv::DescriptorExtractor> extractor;
-    if (descriptorType.compare("BRIEF") == 0)
+    if (descriptorType.compare("BRISK") == 0) {
+
+        int threshold = 30;        // FAST/AGAST detection threshold score.
+        int octaves = 3;           // detection octaves (use 0 to do single scale)
+        float patternScale = 1.0f; // apply this scale to the pattern used for sampling the neighbourhood of a keypoint.
+
+        extractor = cv::BRISK::create(threshold, octaves, patternScale);
+    }
+    else if (descriptorType.compare("BRIEF") == 0)
     {
         extractor = cv::xfeatures2d::BriefDescriptorExtractor::create();
     }
@@ -67,6 +76,7 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
     }
     else if (descriptorType.compare("SIFT") == 0) // check
     {
+        //extractor = cv::xfeatures2d::SiftFeatureDetector::create();
         extractor = cv::xfeatures2d::SiftDescriptorExtractor::create();
     }
 
